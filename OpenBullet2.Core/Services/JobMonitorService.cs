@@ -8,98 +8,92 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace OpenBullet2.Core.Services;
-
-/// <summary>
-/// Monitors jobs, checks defined triggers every second and executes the corresponding actions.
-/// </summary>
-public class JobMonitorService : IDisposable
+namespace OpenBullet2.Core.Services
 {
     /// <summary>
-    /// The list of triggered actions that can be executed by the job monitor.
+    /// Monitors jobs, checks defined triggers every second and executes the corresponding actions.
     /// </summary>
-    public List<TriggeredAction> TriggeredActions { get; set; } = new List<TriggeredAction>();
-
-    private readonly Timer timer;
-    private readonly Timer saveTimer;
-    private readonly JobManagerService jobManager;
-    private readonly string fileName;
-    private readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings
+    public class JobMonitorService : IDisposable
     {
-        TypeNameHandling = TypeNameHandling.Auto,
-        Formatting = Formatting.Indented
-    };
-    private byte[] lastSavedHash = Array.Empty<byte>();
+        /// <summary>
+        /// The list of triggered actions that can be executed by the job monitor.
+        /// </summary>
+        public List<TriggeredAction> TriggeredActions { get; set; } = new List<TriggeredAction>();
 
-    public JobMonitorService(JobManagerService jobManager,
-        string fileName = "UserData/triggeredActions.json", bool autoSave = true)
-    {
-        this.jobManager = jobManager;
-        this.fileName = fileName;
-        RestoreTriggeredActions();
-
-        timer = new Timer(new TimerCallback(_ => CheckAndExecute()), null, 1000, 1000);
-
-        if (autoSave)
+        private readonly Timer timer;
+        private readonly Timer saveTimer;
+        private readonly JobManagerService jobManager;
+        private readonly string fileName = "UserData/triggeredActions.json";
+        private readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings
         {
+            TypeNameHandling = TypeNameHandling.Auto,
+            Formatting = Formatting.Indented
+        };
+        private byte[] lastSavedHash = Array.Empty<byte>();
+
+        public JobMonitorService(JobManagerService jobManager)
+        {
+            this.jobManager = jobManager;
+            RestoreTriggeredActions();
+            timer = new Timer(new TimerCallback(_ => CheckAndExecute()), null, 1000, 1000);
             saveTimer = new Timer(new TimerCallback(_ => SaveStateIfChanged()), null, 5000, 5000);
         }
-    }
 
-    private void CheckAndExecute()
-    {
-        for (var i = 0; i < TriggeredActions.Count; i++)
+        private void CheckAndExecute()
         {
-            var action = TriggeredActions[i];
-            
-            if (action.IsActive && !action.IsExecuting && (action.IsRepeatable || action.Executions == 0))
+            for (var i = 0; i < TriggeredActions.Count; i++)
             {
-                action.CheckAndExecute(jobManager.Jobs).ConfigureAwait(false);
+                var action = TriggeredActions[i];
+                
+                if (action.IsActive && !action.IsExecuting && (action.IsRepeatable || action.Executions == 0))
+                {
+                    action.CheckAndExecute(jobManager.Jobs).ConfigureAwait(false);
+                }
             }
         }
-    }
 
-    private void RestoreTriggeredActions()
-    {
-        if (!File.Exists(fileName))
+        private void RestoreTriggeredActions()
         {
-            return;
-        }
+            if (!File.Exists(fileName))
+            {
+                return;
+            }
 
-        try
-        {
-            var json = File.ReadAllText(fileName);
-            TriggeredActions = JsonConvert.DeserializeObject<TriggeredAction[]>(json, jsonSettings).ToList();
-        }
-        catch
-        {
-            Console.WriteLine("Failed to deserialize triggered actions from json, recreating them");
-        }
-    }
-
-    public void SaveStateIfChanged()
-    {
-        var json = JsonConvert.SerializeObject(TriggeredActions.ToArray(), jsonSettings);
-        var hash = Crypto.MD5(Encoding.UTF8.GetBytes(json));
-
-        if (hash != lastSavedHash)
-        {
             try
             {
-                File.WriteAllText(fileName, json);
-                lastSavedHash = hash;
+                var json = File.ReadAllText(fileName);
+                TriggeredActions = JsonConvert.DeserializeObject<TriggeredAction[]>(json, jsonSettings).ToList();
             }
             catch
             {
-                // File probably in use
+                Console.WriteLine("Failed to deserialize triggered actions from json, recreating them");
             }
         }
-    }
 
-    public void Dispose()
-    {
-        timer?.Dispose();
-        saveTimer?.Dispose();
-        GC.SuppressFinalize(this);
+        private void SaveStateIfChanged()
+        {
+            var json = JsonConvert.SerializeObject(TriggeredActions.ToArray(), jsonSettings);
+            var hash = Crypto.MD5(Encoding.UTF8.GetBytes(json));
+
+            if (hash != lastSavedHash)
+            {
+                try
+                {
+                    File.WriteAllText(fileName, json);
+                    lastSavedHash = hash;
+                }
+                catch
+                {
+                    // File probably in use
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            timer?.Dispose();
+            saveTimer?.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

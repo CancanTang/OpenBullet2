@@ -4,39 +4,40 @@ using RuriLib.Models.Data;
 using RuriLib.Services;
 using System.Linq;
 
-namespace OpenBullet2.Core.Models.Data;
-
-/// <summary>
-/// A factory that creates a <see cref="Wordlist"/> from a <see cref="WordlistEntity"/>.
-/// </summary>
-public class WordlistFactory
+namespace OpenBullet2.Core.Models.Data
 {
-    private readonly RuriLibSettingsService ruriLibSettings;
-
-    public WordlistFactory(RuriLibSettingsService ruriLibSettings)
-    {
-        this.ruriLibSettings = ruriLibSettings;
-    }
-
     /// <summary>
-    /// Creates a <see cref="Wordlist"/> from a <see cref="WordlistEntity"/>.
+    /// A factory that creates a <see cref="Wordlist"/> from a <see cref="WordlistEntity"/>.
     /// </summary>
-    public Wordlist FromEntity(WordlistEntity entity)
+    public class WordlistFactory
     {
-        var wordlistType = ruriLibSettings.Environment.WordlistTypes
-            .FirstOrDefault(w => w.Name == entity.Type);
+        private readonly RuriLibSettingsService ruriLibSettings;
 
-        if (wordlistType == null)
+        public WordlistFactory(RuriLibSettingsService ruriLibSettings)
         {
-            throw new InvalidWordlistTypeException(entity.Type);
+            this.ruriLibSettings = ruriLibSettings;
         }
 
-        var wordlist = new Wordlist(entity.Name, entity.FileName, wordlistType, entity.Purpose, false)
+        /// <summary>
+        /// Creates a <see cref="Wordlist"/> from a <see cref="WordlistEntity"/>.
+        /// </summary>
+        public Wordlist FromEntity(WordlistEntity entity)
         {
-            Id = entity.Id,
-            Total = entity.Total
-        };
+            var wordlistType = ruriLibSettings.Environment.WordlistTypes
+                .FirstOrDefault(w => w.Name == entity.Type);
 
-        return wordlist;
+            if (wordlistType == null)
+            {
+                throw new InvalidWordlistTypeException(entity.Type);
+            }
+
+            var wordlist = new Wordlist(entity.Name, entity.FileName, wordlistType, entity.Purpose, false)
+            {
+                Id = entity.Id,
+                Total = entity.Total
+            };
+
+            return wordlist;
+        }
     }
 }

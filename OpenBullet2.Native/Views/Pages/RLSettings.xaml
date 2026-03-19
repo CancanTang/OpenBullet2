@@ -57,16 +57,19 @@
                           IsChecked="{Binding UseCustomUserAgentsList}" 
                           VerticalContentAlignment="Center"
                           Margin="5 10 0 0"/>
-                <TextBox x:Name="customUserAgentsListTextBox" 
+                <RichTextBox x:Name="customUserAgentsListRTB" 
                              Background="{DynamicResource BackgroundSecondary}" 
                              Foreground="{DynamicResource ForegroundMain}" 
                              FontFamily="Consolas" 
                              Margin="5 10 5 0"
                              Height="100"
-                             VerticalContentAlignment="Top"
-                             AcceptsReturn="True"
                              TextChanged="CustomUserAgentsChanged">
-                </TextBox>
+                    <RichTextBox.Resources>
+                        <Style TargetType="{x:Type Paragraph}">
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </RichTextBox.Resources>
+                </RichTextBox>
                 <Separator Opacity="0.5" Margin="5 20"></Separator>
                 <Label FontSize="24" FontWeight="Bold" Margin="0 0 0 10">Proxies</Label>
                 <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
@@ -87,27 +90,33 @@
                     <Label>(in milliseconds)</Label>
                 </StackPanel>
                 <Label>Global BAN keys (one per line)</Label>
-                <TextBox x:Name="globalBanKeysTextBox" 
+                <RichTextBox x:Name="globalBanKeysRTB" 
                              Background="{DynamicResource BackgroundSecondary}" 
                              Foreground="{DynamicResource ForegroundMain}" 
                              FontFamily="Consolas"
                              Margin="5"
                              Height="100"
-                             VerticalContentAlignment="Top"
-                             AcceptsReturn="True"
                              TextChanged="GlobalBanKeysChanged">
-                </TextBox>
+                    <RichTextBox.Resources>
+                        <Style TargetType="{x:Type Paragraph}">
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </RichTextBox.Resources>
+                </RichTextBox>
                 <Label>Global RETRY keys (one per line)</Label>
-                <TextBox x:Name="globalRetryKeysTextBox" 
+                <RichTextBox x:Name="globalRetryKeysRTB" 
                              Background="{DynamicResource BackgroundSecondary}" 
                              Foreground="{DynamicResource ForegroundMain}" 
                              FontFamily="Consolas" 
                              Margin="5"
                              Height="100"
-                             VerticalContentAlignment="Top"
-                             AcceptsReturn="True"
                              TextChanged="GlobalRetryKeysChanged">
-                </TextBox>
+                    <RichTextBox.Resources>
+                        <Style TargetType="{x:Type Paragraph}">
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </RichTextBox.Resources>
+                </RichTextBox>
                 <Separator Opacity="0.5" Margin="5 20"></Separator>
                 <Label FontSize="24" FontWeight="Bold" Margin="0 0 0 10">Captchas</Label>
                 <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
@@ -208,12 +217,17 @@
                         </StackPanel>
                     </TabItem>
 
-                    <!-- CaptchaCoder -->
+                    <!-- DeCaptcher -->
                     <TabItem>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding CaptchaCoderApiKey}"
+                                <Label>Username</Label>
+                                <TextBox Text="{Binding DeCaptcherUsername}"
+                                Width="400"></TextBox>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                                <Label>Password</Label>
+                                <TextBox Text="{Binding DeCaptcherPassword}"
                                 Width="400"></TextBox>
                             </StackPanel>
                         </StackPanel>
@@ -250,11 +264,11 @@
                         </StackPanel>
                     </TabItem>
 
-                    <!-- AzCaptcha -->
+                    <!-- AZCaptcha -->
                     <TabItem>
                         <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
                             <Label>Api Key</Label>
-                            <TextBox Text="{Binding AzCaptchaApiKey}"
+                            <TextBox Text="{Binding AZCaptchaApiKey}"
                                 Width="400"></TextBox>
                         </StackPanel>
                     </TabItem>
@@ -286,6 +300,15 @@
                         </StackPanel>
                     </TabItem>
 
+                    <!-- SolveReCaptcha -->
+                    <TabItem>
+                        <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                            <Label>Api Key</Label>
+                            <TextBox Text="{Binding SolveRecaptchaApiKey}"
+                                Width="400"></TextBox>
+                        </StackPanel>
+                    </TabItem>
+
                     <!-- TrueCaptcha -->
                     <TabItem>
                         <StackPanel>
@@ -307,7 +330,7 @@
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
                                 <Label>Api Key</Label>
-                                <TextBox Text="{Binding NineKwApiKey}"
+                                <TextBox Text="{Binding NineKWApiKey}"
                                 Width="400"></TextBox>
                             </StackPanel>
                         </StackPanel>
@@ -338,163 +361,24 @@
                         </StackPanel>
                     </TabItem>
 
+                    <!-- AnyCaptcha -->
+                    <TabItem>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
+                                <Label>Api Key</Label>
+                                <TextBox Text="{Binding AnyCaptchaApiKey}"
+                                Width="400"></TextBox>
+                            </StackPanel>
+                        </StackPanel>
+                    </TabItem>
+
                     <!-- CapSolver -->
                     <TabItem>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <TextBlock Foreground="{DynamicResource ForegroundBad}">CapSolver itself explicitly asked to be removed from the software. Please choose another service.</TextBlock>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- CapMonster Cloud -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
                                 <Label>Api Key</Label>
-                                <TextBox Text="{Binding CapMonsterCloudApiKey}"
+                                <TextBox Text="{Binding CapSolverApiKey}"
                                 Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- HumanCoder -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding HumanCoderApiKey}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- Nopecha -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding NopechaApiKey}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- NoCaptcha AI -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding NoCaptchaAiApiKey}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- MetaBypass.Tech -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Client ID</Label>
-                                <TextBox Text="{Binding MetaBypassTechClientId}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Client Secret</Label>
-                                <TextBox Text="{Binding MetaBypassTechClientSecret}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Username</Label>
-                                <TextBox Text="{Binding MetaBypassTechUsername}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Password</Label>
-                                <TextBox Text="{Binding MetaBypassTechPassword}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- CaptchaAI -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding CaptchaAiApiKey}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- NextCaptcha -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding NextCaptchaApiKey}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- EzCaptcha -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding EzCaptchaApiKey}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- EndCaptcha -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Username</Label>
-                                <TextBox Text="{Binding EndCaptchaUsername}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Password</Label>
-                                <TextBox Text="{Binding EndCaptchaPassword}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- BestCaptchaSolver -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding BestCaptchaSolverApiKey}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- CapGuru -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding CapGuruApiKey}"
-                                Width="400"></TextBox>
-                            </StackPanel>
-                        </StackPanel>
-                    </TabItem>
-                    
-                    <!-- AYCD -->
-                    <TabItem>
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
-                                <Label>Api Key</Label>
-                                <TextBox Text="{Binding AycdApiKey}"
-                                         Width="400"></TextBox>
                             </StackPanel>
                         </StackPanel>
                     </TabItem>

@@ -5,39 +5,40 @@ using System.Threading.Tasks;
 using MaxMind.GeoIP2;
 using RuriLib.Models.Proxies;
 
-namespace OpenBullet2.Core.Models.Proxies;
-
-/// <summary>
-/// A provider that uses the free database from https://www.maxmind.com/ to geolocate proxies by IP.
-/// </summary>
-public class DBIPProxyGeolocationProvider : IProxyGeolocationProvider, IDisposable
+namespace OpenBullet2.Core.Models.Proxies
 {
-    private readonly DatabaseReader reader;
-
-    public DBIPProxyGeolocationProvider(string dbFile)
+    /// <summary>
+    /// A provider that uses the free database from https://www.maxmind.com/ to geolocate proxies by IP.
+    /// </summary>
+    public class DBIPProxyGeolocationProvider : IProxyGeolocationProvider, IDisposable
     {
-        reader = new DatabaseReader(dbFile);
-    }
+        private readonly DatabaseReader reader;
 
-    /// <inheritdoc/>
-    public async Task<string> GeolocateAsync(string host)
-    {
-        if (!IPAddress.TryParse(host, out var _))
+        public DBIPProxyGeolocationProvider(string dbFile)
         {
-            var addresses = await Dns.GetHostAddressesAsync(host);
-            
-            if (addresses.Length > 0)
-            {
-                host = addresses.First().MapToIPv4().ToString();
-            }
+            reader = new DatabaseReader(dbFile);
         }
 
-        return reader.Country(host).Country.Name;
-    }
+        /// <inheritdoc/>
+        public async Task<string> Geolocate(string host)
+        {
+            if (!IPAddress.TryParse(host, out var _))
+            {
+                var addresses = await Dns.GetHostAddressesAsync(host);
+                
+                if (addresses.Length > 0)
+                {
+                    host = addresses.First().MapToIPv4().ToString();
+                }
+            }
 
-    public void Dispose()
-    {
-        reader.Dispose();
-        GC.SuppressFinalize(this);
+            return reader.Country(host).Country.Name;
+        }
+
+        public void Dispose()
+        {
+            reader.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

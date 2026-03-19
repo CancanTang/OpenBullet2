@@ -53,7 +53,7 @@ namespace RuriLib.Helpers.Blocks
         public T GetAs<T>(string id) where T : BlockDescriptor
         {
             if (!Descriptors.TryGetValue(id, out BlockDescriptor descriptor))
-                throw new Exception($"No descriptor was found with the given id: {id}");
+                throw new Exception("No descriptor was found with the given id");
 
             return descriptor as T;
         }

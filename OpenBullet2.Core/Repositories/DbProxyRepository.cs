@@ -5,49 +5,47 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenBullet2.Core.Repositories;
-
-/// <summary>
-/// Stores proxies to a database.
-/// </summary>
-public class DbProxyRepository : DbRepository<ProxyEntity>, IProxyRepository
+namespace OpenBullet2.Core.Repositories
 {
-    public DbProxyRepository(ApplicationDbContext context)
-        : base(context)
+    /// <summary>
+    /// Stores proxies to a database.
+    /// </summary>
+    public class DbProxyRepository : DbRepository<ProxyEntity>, IProxyRepository
     {
-        
-    }
-
-    public async override Task UpdateAsync(ProxyEntity entity, CancellationToken cancellationToken = default)
-    {
-        context.Entry(entity).State = EntityState.Modified;
-        await base.UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
-    }
-
-    public async override Task UpdateAsync(IEnumerable<ProxyEntity> entities, CancellationToken cancellationToken = default)
-    {
-        foreach (var entity in entities)
+        public DbProxyRepository(ApplicationDbContext context)
+            : base(context)
         {
-            context.Entry(entity).State = EntityState.Modified;
+            
         }
 
-        await base.UpdateAsync(entities, cancellationToken).ConfigureAwait(false);
-    }
+        public async override Task Update(ProxyEntity entity, CancellationToken cancellationToken = default)
+        {
+            context.Entry(entity).State = EntityState.Modified;
+            await base.Update(entity, cancellationToken).ConfigureAwait(false);
+        }
 
-    /// <inheritdoc/>
-    public async Task<int> RemoveDuplicatesAsync(int groupId)
-    {
-        var proxies = await GetAll()
-            .Where(p => p.Group.Id == groupId)
-            .ToListAsync();
+        public async override Task Update(IEnumerable<ProxyEntity> entities, CancellationToken cancellationToken = default)
+        {
+            foreach (var entity in entities)
+            {
+                context.Entry(entity).State = EntityState.Modified;
+            }
 
-        var duplicates = proxies
-            .GroupBy(p => new { p.Type, p.Host, p.Port, p.Username, p.Password })
-            .SelectMany(g => g.Skip(1))
-            .ToList();
-        
-        await DeleteAsync(duplicates);
+            await base.Update(entities, cancellationToken).ConfigureAwait(false);
+        }
 
-        return duplicates.Count;
+        /// <inheritdoc/>
+        public async Task RemoveDuplicates(int groupId)
+        {
+            var proxies = await GetAll()
+                .Where(p => p.Group.Id == groupId)
+                .ToListAsync();
+
+            var duplicates = proxies
+                .GroupBy(p => new { p.Type, p.Host, p.Port, p.Username, p.Password })
+                .SelectMany(g => g.Skip(1));
+            
+            await Delete(duplicates);
+        }
     }
 }

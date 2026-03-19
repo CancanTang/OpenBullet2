@@ -73,9 +73,7 @@ namespace RuriLib.Functions.Http
             Activity.Current = null;
             using var timeoutCts = new CancellationTokenSource(options.TimeoutMilliseconds);
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(data.CancellationToken, timeoutCts.Token);
-            using var response = await client.SendAsync(request, options.ReadResponseContent ?
-                HttpCompletionOption.ResponseContentRead : HttpCompletionOption.ResponseHeadersRead,
-                linkedCts.Token).ConfigureAwait(false);
+            using var response = await client.SendAsync(request, linkedCts.Token).ConfigureAwait(false);
 
             await LogHttpResponseData(data, response, cookieContainer, options).ConfigureAwait(false);
         }
@@ -116,9 +114,7 @@ namespace RuriLib.Functions.Http
             Activity.Current = null;
             using var timeoutCts = new CancellationTokenSource(options.TimeoutMilliseconds);
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(data.CancellationToken, timeoutCts.Token);
-            using var response = await client.SendAsync(request, options.ReadResponseContent ?
-                HttpCompletionOption.ResponseContentRead : HttpCompletionOption.ResponseHeadersRead,
-                linkedCts.Token).ConfigureAwait(false);
+            using var response = await client.SendAsync(request, linkedCts.Token).ConfigureAwait(false);
 
             await LogHttpResponseData(data, response, cookieContainer, options).ConfigureAwait(false);
         }
@@ -160,9 +156,7 @@ namespace RuriLib.Functions.Http
             Activity.Current = null;
             using var timeoutCts = new CancellationTokenSource(options.TimeoutMilliseconds);
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(data.CancellationToken, timeoutCts.Token);
-            using var response = await client.SendAsync(request, options.ReadResponseContent ?
-                HttpCompletionOption.ResponseContentRead : HttpCompletionOption.ResponseHeadersRead,
-                linkedCts.Token).ConfigureAwait(false);
+            using var response = await client.SendAsync(request, linkedCts.Token).ConfigureAwait(false);
 
             await LogHttpResponseData(data, response, cookieContainer, options).ConfigureAwait(false);
         }
@@ -240,9 +234,7 @@ namespace RuriLib.Functions.Http
                 Activity.Current = null;
                 using var timeoutCts = new CancellationTokenSource(options.TimeoutMilliseconds);
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(data.CancellationToken, timeoutCts.Token);
-                using var response = await client.SendAsync(request, options.ReadResponseContent ?
-                    HttpCompletionOption.ResponseContentRead : HttpCompletionOption.ResponseHeadersRead,
-                    linkedCts.Token).ConfigureAwait(false);
+                using var response = await client.SendAsync(request, linkedCts.Token).ConfigureAwait(false);
 
                 await LogHttpResponseData(data, response, cookieContainer, options).ConfigureAwait(false);
             }
@@ -308,22 +300,15 @@ namespace RuriLib.Functions.Http
         private static async Task LogHttpResponseData(BotData data, HttpResponseMessage response,
             CookieContainer cookieContainer, Options.HttpRequestOptions requestOptions)
         {
-            if (requestOptions.ReadResponseContent)
+            // Try to read the raw source for Content-Length calculation
+            try
             {
-                // Try to read the raw source for Content-Length calculation
-                try
-                {
-                    data.RAWSOURCE = await response.Content.ReadAsByteArrayAsync(data.CancellationToken).ConfigureAwait(false);
-                }
-                catch (NullReferenceException)
-                {
-                    // Thrown when there is no content (204) or we decided to not read it
-                    data.RAWSOURCE = [];
-                }
+                data.RAWSOURCE = await response.Content.ReadAsByteArrayAsync(data.CancellationToken).ConfigureAwait(false);
             }
-            else
+            catch (NullReferenceException)
             {
-                data.RAWSOURCE = [];
+                // Thrown when there is no content (204) or we decided to not read it
+                data.RAWSOURCE = Array.Empty<byte>();
             }
 
             // Address
@@ -342,10 +327,13 @@ namespace RuriLib.Functions.Http
             }
 
             data.HEADERS = response.Headers.ToDictionary(h => h.Key, GetHeaderValue);
-            
-            foreach (var header in response.Content.Headers)
+
+            if (response.Content != null)
             {
-                data.HEADERS[header.Key] = GetHeaderValue(header);
+                foreach (var header in response.Content.Headers)
+                {
+                    data.HEADERS[header.Key] = GetHeaderValue(header);
+                }
             }
 
             if (!data.HEADERS.ContainsKey("Content-Length"))

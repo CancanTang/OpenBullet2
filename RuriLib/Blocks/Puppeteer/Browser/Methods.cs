@@ -24,7 +24,7 @@ namespace RuriLib.Blocks.Puppeteer.Browser
             data.Logger.LogHeader();
 
             // Check if there is already an open browser
-            var oldBrowser = data.TryGetObject<IBrowser>("puppeteer");
+            var oldBrowser = data.TryGetObject<PuppeteerSharp.Browser>("puppeteer");
             if (oldBrowser is not null && !oldBrowser.IsClosed)
             {
                 data.Logger.Log("The browser is already open, close it if you want to open a new browser", LogColors.DarkSalmon);
@@ -145,13 +145,7 @@ namespace RuriLib.Blocks.Puppeteer.Browser
             data.Logger.LogHeader();
 
             var browser = GetBrowser(data);
-            
-            // Workaround https://github.com/hardkoded/puppeteer-sharp/issues/1587
-            await browser.GetVersionAsync();
-            
-            var pages = await browser.PagesAsync();
-            var page = pages[index];
-            
+            var page = (await browser.PagesAsync())[index];
             await page.BringToFrontAsync();
             SetPageAndFrame(data, page);
 
@@ -194,16 +188,16 @@ namespace RuriLib.Blocks.Puppeteer.Browser
             data.Logger.Log($"Went forward to the next visited page", LogColors.DarkSalmon);
         }
 
-        private static IBrowser GetBrowser(BotData data)
-            => data.TryGetObject<IBrowser>("puppeteer") ?? throw new Exception("The browser is not open!");
+        private static PuppeteerSharp.Browser GetBrowser(BotData data)
+            => data.TryGetObject<PuppeteerSharp.Browser>("puppeteer") ?? throw new Exception("The browser is not open!");
 
-        private static IPage GetPage(BotData data)
-            => data.TryGetObject<IPage>("puppeteerPage") ?? throw new Exception("No pages open!");
+        private static PuppeteerSharp.Page GetPage(BotData data)
+            => data.TryGetObject<PuppeteerSharp.Page>("puppeteerPage") ?? throw new Exception("No pages open!");
 
         private static void SwitchToMainFramePrivate(BotData data)
             => data.SetObject("puppeteerFrame", GetPage(data).MainFrame);
 
-        private static void SetPageAndFrame(BotData data, IPage page)
+        private static void SetPageAndFrame(BotData data, PuppeteerSharp.Page page)
         {
             data.SetObject("puppeteerPage", page, false);
             SwitchToMainFramePrivate(data);
@@ -212,7 +206,7 @@ namespace RuriLib.Blocks.Puppeteer.Browser
         private static void StopYoveProxyInternalServer(BotData data)
             => data.TryGetObject<ProxyClient>("puppeteer.yoveproxy")?.Dispose();
 
-        private static async Task SetPageLoadingOptions(BotData data, IPage page)
+        private static async Task SetPageLoadingOptions(BotData data, PuppeteerSharp.Page page)
         {
             await page.SetRequestInterceptionAsync(true);
             page.Request += (sender, e) =>

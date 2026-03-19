@@ -14,7 +14,6 @@ using RuriLib.Proxies.Exceptions;
 using System.Collections.Generic;
 using RuriLib.Http.Models;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace RuriLib.Http
 {
@@ -225,16 +224,8 @@ namespace RuriLib.Http
         {
             // Dispose of any previous connection (if we're coming from a redirect)
             tcpClient?.Close();
-
-            if (connectionCommonStream is not null)
-            {
-                await connectionCommonStream.DisposeAsync().ConfigureAwait(false);
-            }
-            
-            if (connectionNetworkStream is not null)
-            {
-                await connectionNetworkStream.DisposeAsync().ConfigureAwait(false);
-            }
+            connectionCommonStream?.Dispose();
+            connectionNetworkStream?.Dispose();
 
             // Get the stream from the proxies TcpClient
             var uri = request.Uri;
@@ -258,10 +249,10 @@ namespace RuriLib.Http
                     if (CertRevocationMode != X509RevocationMode.Online)
                     {
                         sslOptions.RemoteCertificateValidationCallback =
-                            (_, _, _, _) => true;
+                            new RemoteCertificateValidationCallback((s, c, ch, e) => { return true; });
                     }
 
-                    if (UseCustomCipherSuites && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    if (UseCustomCipherSuites)
                     {
                         sslOptions.CipherSuitesPolicy = new CipherSuitesPolicy(AllowedCipherSuites);
                     }

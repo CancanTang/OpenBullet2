@@ -51,7 +51,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             vm = SP.GetService<ViewModelsService>().Hits;
             DataContext = vm;
-            _ = vm.InitializeAsync();
+            _ = vm.Initialize();
 
             InitializeComponent();
             window = SP.GetService<MainWindow>();
@@ -84,7 +84,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             try
             {
-                await vm.DeleteAsync(SelectedHits);
+                await vm.Delete(SelectedHits);
                 Alert.Success("Done", "Successfully deleted the selected hits from the DB");
             }
             catch (Exception ex)
@@ -93,13 +93,13 @@ namespace OpenBullet2.Native.Views.Pages
             }
         }
 
-        private async void Purge(object sender, RoutedEventArgs e)
+        private void Purge(object sender, RoutedEventArgs e)
         {
             if (Alert.Choice("Are you REALLY sure?", "This will delete ALL your hits, not just the ones you filtered. Are you sure you want to do this?"))
             {
                 try
                 {
-                    await vm.PurgeAsync();
+                    vm.Purge();
                     Alert.Success("Done", "Successfully deleted all hits from the DB");
                 }
                 catch (Exception ex)
@@ -121,7 +121,7 @@ namespace OpenBullet2.Native.Views.Pages
 
         private async void DeleteDuplicates(object sender, RoutedEventArgs e)
         {
-            var deleted = await vm.DeleteDuplicatesAsync();
+            var deleted = await vm.DeleteDuplicates();
             Alert.Success("Done", $"Successfully deleted {deleted} duplicate hits");
         }
 
@@ -202,7 +202,7 @@ namespace OpenBullet2.Native.Views.Pages
             await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
                 var jobs = SP.GetService<ViewModelsService>().Jobs;
-                var jobVM = await jobs.CreateJobAsync(jobOptions);
+                var jobVM = await jobs.CreateJob(jobOptions);
                 window.DisplayJob(jobVM);
             });
         }

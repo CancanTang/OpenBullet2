@@ -5,33 +5,34 @@ using RuriLib.Models.Proxies.ProxySources;
 using System;
 using System.Threading.Tasks;
 
-namespace OpenBullet2.Core.Services;
-
-/// <summary>
-/// Factory that creates a <see cref="ProxySource"/> from a <see cref="ProxySourceOptions"/> object.
-/// </summary>
-public class ProxySourceFactoryService
+namespace OpenBullet2.Core.Services
 {
-    private readonly ProxyReloadService _reloadService;
-
-    public ProxySourceFactoryService(ProxyReloadService reloadService)
-    {
-        _reloadService = reloadService;
-    }
-
     /// <summary>
-    /// Creates a <see cref="ProxySource"/> from a <see cref="ProxySourceOptions"/> object.
+    /// Factory that creates a <see cref="ProxySource"/> from a <see cref="ProxySourceOptions"/> object.
     /// </summary>
-    public Task<ProxySource> FromOptions(ProxySourceOptions options)
+    public class ProxySourceFactoryService
     {
-        ProxySource source = options switch
-        {
-            RemoteProxySourceOptions x => new RemoteProxySource(x.Url) { DefaultType = x.DefaultType },
-            FileProxySourceOptions x => new FileProxySource(x.FileName) { DefaultType = x.DefaultType },
-            GroupProxySourceOptions x => new GroupProxySource(x.GroupId, _reloadService),
-            _ => throw new NotImplementedException()
-        };
+        private readonly ProxyReloadService reloadService;
 
-        return Task.FromResult(source);
+        public ProxySourceFactoryService(ProxyReloadService reloadService)
+        {
+            this.reloadService = reloadService;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="ProxySource"/> from a <see cref="ProxySourceOptions"/> object.
+        /// </summary>
+        public Task<ProxySource> FromOptions(ProxySourceOptions options)
+        {
+            ProxySource source = options switch
+            {
+                RemoteProxySourceOptions x => new RemoteProxySource(x.Url) { DefaultType = x.DefaultType },
+                FileProxySourceOptions x => new FileProxySource(x.FileName) { DefaultType = x.DefaultType },
+                GroupProxySourceOptions x => new GroupProxySource(x.GroupId, reloadService),
+                _ => throw new NotImplementedException()
+            };
+
+            return Task.FromResult(source);
+        }
     }
 }

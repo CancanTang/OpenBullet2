@@ -70,11 +70,6 @@ namespace RuriLib.Helpers.LoliCode
         /// </summary>
         public static byte[] ParseByteArray(ref string input)
         {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                return Array.Empty<byte>();
-            }
-            
             input = input.TrimStart();
 
             var match = Regex.Match(input, "[A-Za-z0-9+/=]+");

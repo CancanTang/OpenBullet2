@@ -66,13 +66,13 @@ namespace OpenBullet2.Native.Views.Dialogs
         public async void SelectConfig(ConfigViewModel config)
         {
             vm.SelectConfig(config);
-            await vm.TrySetRecordAsync();
+            await vm.TrySetRecord();
         }
 
         public async void SelectWordlist(WordlistEntity entity)
         {
             (vm.DataPoolOptions as WordlistDataPoolOptionsViewModel).SelectWordlist(entity);
-            await vm.TrySetRecordAsync();
+            await vm.TrySetRecord();
         }
 
         private void AddWordlist(object sender, RoutedEventArgs e)
@@ -271,7 +271,7 @@ namespace OpenBullet2.Native.Views.Dialogs
             }
         }
 
-        public async Task TrySetRecordAsync()
+        public async Task TrySetRecord()
         {
             if (Options.DataPool is WordlistDataPoolOptions wdpo)
             {
@@ -611,7 +611,7 @@ namespace OpenBullet2.Native.Views.Dialogs
         public IEnumerable<string> WordlistTypes => rlSettingsService.Environment.WordlistTypes.Select(t => t.Name);
         #endregion
 
-        public Task AddWordlist(WordlistEntity entity) => wordlistRepo.AddAsync(entity);
+        public Task AddWordlist(WordlistEntity entity) => wordlistRepo.Add(entity);
     }
 
     public enum StartConditionMode
@@ -645,7 +645,7 @@ namespace OpenBullet2.Native.Views.Dialogs
 
             if (options.WordlistId != -1)
             {
-                wordlist = wordlistRepo.GetAsync(options.WordlistId).Result;
+                wordlist = wordlistRepo.Get(options.WordlistId).Result;
             }
 
             // If the wordlist was not found (e.g. deleted)

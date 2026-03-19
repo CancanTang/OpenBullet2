@@ -176,7 +176,6 @@
                 FontFamily="Consolas"
                 IsReadOnly="True"
                 AcceptsReturn="True"
-                VerticalContentAlignment="Top"
                 Text="{Binding LinesPreview}" />
         </Grid>
 

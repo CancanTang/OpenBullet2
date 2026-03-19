@@ -56,16 +56,10 @@ namespace RuriLib.Helpers.LoliCode
             // @myVariable
             // $"interp"
             // "fixedValue"
-            if (input.Length > 0 && input[0] == '@') // VARIABLE
+            if (input[0] == '@') // VARIABLE
             {
                 input = input[1..];
-                
-                // If there is just @ without anything after it,
-                // the variable name is empty. Do not throw an exception here
-                // or it will prevent saving the config (even if invalid)
-                var variableName = input.Length == 0 || input[0] == ' ' || input[0] == '\t'
-                    ? string.Empty
-                    : LineParser.ParseToken(ref input);
+                var variableName = LineParser.ParseToken(ref input);
 
                 setting.InputMode = SettingInputMode.Variable;
                 setting.InputVariableName = variableName;
@@ -89,7 +83,7 @@ namespace RuriLib.Helpers.LoliCode
                     _ => throw new NotSupportedException()
                 };
             }
-            else if (input.Length > 0 && input[0] == '$') // INTERPOLATED
+            else if (input[0] == '$') // INTERPOLATED
             {
                 input = input[1..];
                 setting.InputMode = SettingInputMode.Interpolated;

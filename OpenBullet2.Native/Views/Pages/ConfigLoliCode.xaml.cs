@@ -169,7 +169,7 @@ namespace OpenBullet2.Native.Views.Pages
             {
                 configService.SelectedConfig.LoliCodeScript = editor.Text;
                 configService.SelectedConfig.StartupLoliCodeScript = startupEditor.Text;
-                await configRepo.SaveAsync(configService.SelectedConfig);
+                await configRepo.Save(configService.SelectedConfig);
                 Alert.Success("Saved", $"{configService.SelectedConfig.Metadata.Name} was saved successfully!");
             }
         }

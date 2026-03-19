@@ -1,9 +1,9 @@
-using Newtonsoft.Json;
-using RuriLib.Exceptions;
+﻿using RuriLib.Exceptions;
 using RuriLib.Extensions;
 using RuriLib.Functions.Conversion;
 using RuriLib.Functions.Crypto;
 using RuriLib.Helpers;
+using RuriLib.Helpers.CSharp;
 using RuriLib.Helpers.LoliCode;
 using RuriLib.Models.Blocks.Custom.Script;
 using RuriLib.Models.Configs;
@@ -116,18 +116,12 @@ namespace RuriLib.Models.Blocks.Custom
             {
                 lineNumber++;
                 var match = Regex.Match(line, "OUTPUT ([^ ]+) @([^ ]+)$");
-
-                try
-                {
-                    OutputVariables.Add(
-                        new OutputVariable {
-                            Type = Enum.Parse<VariableType>(match.Groups[1].Value), Name = match.Groups[2].Value
-                        });
-                }
-                catch
-                {
-                    // TODO: Warn the user that the output variable is invalid
-                }
+                OutputVariables.Add(
+                    new OutputVariable
+                    {
+                        Type = Enum.Parse<VariableType>(match.Groups[1].Value),
+                        Name = match.Groups[2].Value
+                    });
             }
         }
 
@@ -151,7 +145,7 @@ namespace RuriLib.Models.Blocks.Custom
 
                     if (!File.Exists(scriptPath))
                         File.WriteAllText(scriptPath, Script);
-
+                    
                     writer.WriteLine($"var {engineName} = new Engine();");
 
                     if (!string.IsNullOrWhiteSpace(InputVariables))
@@ -176,28 +170,30 @@ namespace RuriLib.Models.Blocks.Custom
 
                 case Interpreter.NodeJS:
                     var nodeScript = @$"module.exports = async ({MakeInputs()}) => {{
-                        {Script}
-                        var noderesult = {{
-                        {MakeNodeObject()}
-                        }};
-                        return noderesult;
-                        }}";
+{Script}
+var noderesult = {{
+{MakeNodeObject()}
+}};
+return noderesult;
+}}";
 
                     scriptHash = HexConverter.ToHexString(Crypto.MD5(Encoding.UTF8.GetBytes(nodeScript)));
+                    scriptPath = $"Scripts/{scriptHash}.{GetScriptFileExtension(Interpreter)}";
 
-                    string escapedScript = JsonConvert.ToString(nodeScript);
+                    if (!Directory.Exists("Scripts"))
+                        Directory.CreateDirectory("Scripts");
 
-                    writer.WriteLine($"var {resultName} = await InvokeNode<dynamic>(data, {escapedScript}, new object[] {{ {InputVariables} }}, true, \"{scriptHash}\");");
+                    if (!File.Exists(scriptPath))
+                        File.WriteAllText(scriptPath, nodeScript);
+
+                    writer.WriteLine($"var {resultName} = await InvokeNode<dynamic>(data, \"{scriptPath}\", new object[] {{ {InputVariables} }});");
 
                     foreach (var output in OutputVariables)
                     {
                         if (!definedVariables.Contains(output.Name))
-                        {
                             writer.Write($"{ToCSharpType(output.Type)} ");
-                            definedVariables.Add(output.Name);
-                        }
 
-                        writer.WriteLine($"{output.Name} = {GetNodeMethod(resultName, output)};");
+                        writer.WriteLine($"{output.Name} = {resultName}.GetProperty(\"{output.Name}\").{GetNodeMethod(output.Type)};");
                     }
 
                     break;
@@ -249,18 +245,17 @@ namespace RuriLib.Models.Blocks.Custom
             return writer.ToString();
         }
 
-        private string GetNodeMethod(string resultName, OutputVariable output)
+        private string GetNodeMethod(VariableType type)
         {
-            return output.Type switch
+            return type switch
             {
-                VariableType.Bool => $"{resultName}.GetProperty(\"{output.Name}\").GetBoolean()",
-                VariableType.ByteArray => $"{resultName}.GetProperty(\"{output.Name}\").GetBytesFromBase64()",
-                VariableType.Float => $"{resultName}.GetProperty(\"{output.Name}\").GetSingle()",
-                VariableType.Int => $"{resultName}.GetProperty(\"{output.Name}\").GetInt32()",
-                VariableType.String => $"{resultName}.GetProperty(\"{output.Name}\").ToString()",
-                VariableType.ListOfStrings => $"((System.Text.Json.JsonElement.ArrayEnumerator){resultName}.GetProperty(\"{output.Name}\").EnumerateArray()).Select(e => e.GetString()).ToList()",
-                VariableType.DictionaryOfStrings => $"((System.Text.Json.JsonElement.ObjectEnumerator){resultName}.GetProperty(\"{output.Name}\").EnumerateObject()).ToDictionary(e => e.Name, e => e.Value.GetString())",
-                _ => throw new NotImplementedException()
+                VariableType.Bool => "GetBoolean()",
+                VariableType.ByteArray => "GetBytesFromBase64()",
+                VariableType.Float => "GetSingle()",
+                VariableType.Int => "GetInt32()",
+                VariableType.ListOfStrings => "EnumerateArray().Select(e => e.GetString()).ToList()",
+                VariableType.String => "ToString()",
+                _ => throw new NotImplementedException() // Dictionary not implemented yet
             };
         }
 
@@ -288,8 +283,7 @@ namespace RuriLib.Models.Blocks.Custom
                 VariableType.Int => "int",
                 VariableType.ListOfStrings => "List<string>",
                 VariableType.String => "string",
-                VariableType.DictionaryOfStrings => "Dictionary<string, string>",
-                _ => throw new NotImplementedException()
+                _ => throw new NotImplementedException() // Dictionary not implemented yet
             };
         }
 

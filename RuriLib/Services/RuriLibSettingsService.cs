@@ -10,7 +10,7 @@ namespace RuriLib.Services
 {
     public class RuriLibSettingsService
     {
-        private readonly JsonSerializerSettings _jsonSettings;
+        private readonly JsonSerializerSettings jsonSettings;
         private string BaseFolder { get; init; }
         private string EnvFile => Path.Combine(BaseFolder, "Environment.ini");
         private string RlSettFile => Path.Combine(BaseFolder, "RuriLibSettings.json");
@@ -23,7 +23,7 @@ namespace RuriLib.Services
             BaseFolder = baseFolder;
             Directory.CreateDirectory(baseFolder);
 
-            _jsonSettings = new JsonSerializerSettings 
+            jsonSettings = new JsonSerializerSettings 
             { 
                 Formatting = Formatting.Indented,
                 TypeNameHandling = TypeNameHandling.Auto
@@ -37,15 +37,15 @@ namespace RuriLib.Services
             Environment = EnvironmentSettings.FromIni(EnvFile);
 
             RuriLibSettings = File.Exists(RlSettFile)
-                ? JsonConvert.DeserializeObject<GlobalSettings>(File.ReadAllText(RlSettFile), _jsonSettings)
+                ? JsonConvert.DeserializeObject<GlobalSettings>(File.ReadAllText(RlSettFile), jsonSettings)
                 : CreateGlobalSettings();
         }
 
         /// <summary>
         /// Saves the settings to the designated file.
         /// </summary>
-        public async Task Save()
-            => await File.WriteAllTextAsync(RlSettFile, JsonConvert.SerializeObject(RuriLibSettings, _jsonSettings));
+        public Task Save()
+            => File.WriteAllTextAsync(RlSettFile, JsonConvert.SerializeObject(RuriLibSettings, jsonSettings));
 
         /// <summary>
         /// Gets the currently supported statuses (including the custom ones defined in the Environment settings).

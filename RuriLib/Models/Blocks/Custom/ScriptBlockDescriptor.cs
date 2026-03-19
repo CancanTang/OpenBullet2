@@ -1,4 +1,7 @@
-﻿namespace RuriLib.Models.Blocks.Custom
+﻿using RuriLib.Models.Blocks.Parameters;
+using RuriLib.Models.Variables;
+
+namespace RuriLib.Models.Blocks.Custom
 {
     public class ScriptBlockDescriptor : BlockDescriptor
     {

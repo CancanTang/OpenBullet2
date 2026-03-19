@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OpenBullet2.Core;
 
-#nullable disable
-
 namespace OpenBullet2.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
@@ -15,7 +13,8 @@ namespace OpenBullet2.Core.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.6");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "5.0.8");
 
             modelBuilder.Entity("OpenBullet2.Core.Entities.GuestEntity", b =>
                 {
@@ -234,9 +233,8 @@ namespace OpenBullet2.Core.Migrations
             modelBuilder.Entity("OpenBullet2.Core.Entities.ProxyEntity", b =>
                 {
                     b.HasOne("OpenBullet2.Core.Entities.ProxyGroupEntity", "Group")
-                        .WithMany("Proxies")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .WithMany()
+                        .HasForeignKey("GroupId");
 
                     b.Navigation("Group");
                 });
@@ -244,9 +242,8 @@ namespace OpenBullet2.Core.Migrations
             modelBuilder.Entity("OpenBullet2.Core.Entities.ProxyGroupEntity", b =>
                 {
                     b.HasOne("OpenBullet2.Core.Entities.GuestEntity", "Owner")
-                        .WithMany("ProxyGroups")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany()
+                        .HasForeignKey("OwnerId");
 
                     b.Navigation("Owner");
                 });
@@ -258,16 +255,6 @@ namespace OpenBullet2.Core.Migrations
                         .HasForeignKey("OwnerId");
 
                     b.Navigation("Owner");
-                });
-
-            modelBuilder.Entity("OpenBullet2.Core.Entities.GuestEntity", b =>
-                {
-                    b.Navigation("ProxyGroups");
-                });
-
-            modelBuilder.Entity("OpenBullet2.Core.Entities.ProxyGroupEntity", b =>
-                {
-                    b.Navigation("Proxies");
                 });
 #pragma warning restore 612, 618
         }

@@ -19,11 +19,5 @@ namespace RuriLib.Models.Data.DataPools
             Size = DataList.Count();
             WordlistType = wordlistType;
         }
-        
-        /// <inheritdoc/>
-        public override void Reload()
-        {
-            DataList = File.ReadLines(FileName);
-        }
     }
 }

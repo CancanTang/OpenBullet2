@@ -63,7 +63,7 @@ namespace OpenBullet2.Native.Views.Pages
             {
                 Application.Current.Dispatcher.Invoke(() => jobLog.Clear());
                 jobLog.BufferSize = obSettingsService.Settings.GeneralSettings.LogBufferSize;
-                await vm.StartAsync();
+                await vm.Start();
             }
             catch (Exception ex)
             {
@@ -75,7 +75,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             try
             {
-                await vm.StopAsync();
+                await vm.Stop();
             }
             catch (Exception ex)
             {
@@ -87,7 +87,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             try
             {
-                await vm.PauseAsync();
+                await vm.Pause();
             }
             catch (Exception ex)
             {
@@ -99,7 +99,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             try
             {
-                await vm.ResumeAsync();
+                await vm.Resume();
             }
             catch (Exception ex)
             {
@@ -111,7 +111,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             try
             {
-                await vm.AbortAsync();
+                await vm.Abort();
             }
             catch (Exception ex)
             {
@@ -140,7 +140,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             try
             {
-                await vm.ChangeBotsAsync(newValue);
+                await vm.ChangeBots(newValue);
             }
             catch (Exception ex)
             {

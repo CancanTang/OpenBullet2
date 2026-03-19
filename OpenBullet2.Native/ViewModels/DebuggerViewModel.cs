@@ -180,7 +180,7 @@ namespace OpenBullet2.Native.ViewModels
             WordlistType = WordlistTypes.First();
         }
 
-        public async Task RunAsync()
+        public async Task Run()
         {
             if (!PersistLog)
             {

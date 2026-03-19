@@ -88,16 +88,9 @@ namespace RuriLib.Models.Environment
             object obj = Activator.CreateInstance(type);
             foreach (var pair in parameters
                 .Where(p => !string.IsNullOrEmpty(p))
-                .Select(p => p.Split('=', 2, StringSplitOptions.TrimEntries)))
+                .Select(p => p.Split(new char[] { '=' }, 2)))
             {
                 var prop = type.GetProperty(pair[0]);
-                
-                if (prop == null)
-                {
-                    throw new Exception(
-                        $"Property {pair[0]} not found in {type.Name}");
-                }
-                
                 var propObj = prop.GetValue(obj);
                 dynamic value = null;
 

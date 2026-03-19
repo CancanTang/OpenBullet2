@@ -3,35 +3,36 @@ using RuriLib.Models.Hits;
 using RuriLib.Models.Hits.HitOutputs;
 using System;
 
-namespace OpenBullet2.Core.Models.Hits;
-
-/// <summary>
-/// A factory that creates an <see cref="IHitOutput"/> from <see cref="HitOutputOptions"/>.
-/// </summary>
-public class HitOutputFactory
+namespace OpenBullet2.Core.Models.Hits
 {
-    private readonly HitStorageService hitStorage;
-
-    public HitOutputFactory(HitStorageService hitStorage)
-    {
-        this.hitStorage = hitStorage;
-    }
-
     /// <summary>
-    /// Creates an <see cref="IHitOutput"/> from <see cref="HitOutputOptions"/>.
+    /// A factory that creates an <see cref="IHitOutput"/> from <see cref="HitOutputOptions"/>.
     /// </summary>
-    public IHitOutput FromOptions(HitOutputOptions options)
+    public class HitOutputFactory
     {
-        IHitOutput output = options switch
-        {
-            DatabaseHitOutputOptions _ => new DatabaseHitOutput(hitStorage),
-            FileSystemHitOutputOptions x => new FileSystemHitOutput(x.BaseDir),
-            DiscordWebhookHitOutputOptions x => new DiscordWebhookHitOutput(x.Webhook, x.Username, x.AvatarUrl),
-            TelegramBotHitOutputOptions x => new TelegramBotHitOutput(x.Token, x.ChatId),
-            CustomWebhookHitOutputOptions x => new CustomWebhookHitOutput(x.Url, x.User),
-            _ => throw new NotImplementedException()
-        };
+        private readonly HitStorageService hitStorage;
 
-        return output;
+        public HitOutputFactory(HitStorageService hitStorage)
+        {
+            this.hitStorage = hitStorage;
+        }
+
+        /// <summary>
+        /// Creates an <see cref="IHitOutput"/> from <see cref="HitOutputOptions"/>.
+        /// </summary>
+        public IHitOutput FromOptions(HitOutputOptions options)
+        {
+            IHitOutput output = options switch
+            {
+                DatabaseHitOutputOptions _ => new DatabaseHitOutput(hitStorage),
+                FileSystemHitOutputOptions x => new FileSystemHitOutput(x.BaseDir),
+                DiscordWebhookHitOutputOptions x => new DiscordWebhookHitOutput(x.Webhook, x.Username, x.AvatarUrl),
+                TelegramBotHitOutputOptions x => new TelegramBotHitOutput(x.ApiServer, x.Token, x.ChatId),
+                CustomWebhookHitOutputOptions x => new CustomWebhookHitOutput(x.Url, x.User),
+                _ => throw new NotImplementedException()
+            };
+
+            return output;
+        }
     }
 }

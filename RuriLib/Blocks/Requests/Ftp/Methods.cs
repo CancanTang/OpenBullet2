@@ -1,4 +1,5 @@
 ﻿using FluentFTP;
+using FluentFTP.Proxy;
 using RuriLib.Attributes;
 using RuriLib.Logging;
 using RuriLib.Models.Bots;
@@ -7,61 +8,59 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using FluentFTP.Proxy.AsyncProxy;
-using RuriLib.Models.Proxies;
 
 namespace RuriLib.Blocks.Requests.Ftp
 {
     [BlockCategory("FTP", "Blocks to work with the FTP protocol", "#fbec5d")]
     public static class Methods
     {
-        [Block("Connects to an FTP server")]
+        [Block("Connects to an FTP server", extraInfo = "Currently, this block only supports HTTP proxies")]
         public static async Task FtpConnect(BotData data, string host, int port = 21, 
             string username = "", string password = "", int timeoutMilliseconds = 10000)
         {
             data.Logger.LogHeader();
 
-            AsyncFtpClient client;
-            
-            var ftpConfig = new FtpConfig
+            if (data.UseProxy && data.Proxy is not null && data.Proxy.Type != Models.Proxies.ProxyType.Http)
             {
-                ConnectTimeout = timeoutMilliseconds,
-                DataConnectionConnectTimeout = timeoutMilliseconds,
-                DataConnectionReadTimeout = timeoutMilliseconds,
-                ReadTimeout = timeoutMilliseconds
-            };
+                throw new Exception("Currently, this block only supports HTTP proxies");
+            }
+
+            FtpClient client;
 
             if (data.UseProxy && data.Proxy is not null)
             {
-                var proxyInfo = new FtpProxyProfile
+                var proxyInfo = new ProxyInfo
                 {
-                    ProxyHost = data.Proxy.Host,
-                    ProxyPort = data.Proxy.Port,
-                    ProxyCredentials = new NetworkCredential(data.Proxy.Username, data.Proxy.Password)
+                    Host = data.Proxy.Host,
+                    Port = data.Proxy.Port,
+                    Credentials = new NetworkCredential(data.Proxy.Username, data.Proxy.Password)
                 };
 
-                client = data.Proxy.Type switch 
+                client = new FtpClientHttp11Proxy(proxyInfo)
                 {
-                    ProxyType.Http => new AsyncFtpClientHttp11Proxy(proxyInfo),
-                    ProxyType.Socks4 => new AsyncFtpClientSocks4Proxy(proxyInfo),
-                    ProxyType.Socks4a => new AsyncFtpClientSocks4aProxy(proxyInfo),
-                    ProxyType.Socks5 => new AsyncFtpClientSocks5Proxy(proxyInfo),
-                    _ => throw new Exception($"Unsupported proxy type: {data.Proxy.Type}")
+                    Host = host,
+                    Port = port,
+                    Credentials = new NetworkCredential(username, password),
+                    ConnectTimeout = timeoutMilliseconds,
+                    DataConnectionConnectTimeout = timeoutMilliseconds,
+                    DataConnectionReadTimeout = timeoutMilliseconds,
+                    ReadTimeout = timeoutMilliseconds
                 };
             }
             else
             {
-                client = new AsyncFtpClient();
+                client = new FtpClient(host, port, username, password)
+                {
+                    ConnectTimeout = timeoutMilliseconds,
+                    DataConnectionConnectTimeout = timeoutMilliseconds,
+                    DataConnectionReadTimeout = timeoutMilliseconds,
+                    ReadTimeout = timeoutMilliseconds
+                };
             }
-            
-            client.Host = host;
-            client.Port = port;
-            client.Credentials = new NetworkCredential(username, password);
-            client.Config = ftpConfig;
 
             data.SetObject("ftpClient", client);
-            client.LegacyLogger = InitLogger(data);
-            await client.AutoConnect(data.CancellationToken).ConfigureAwait(false);
+            client.OnLogEvent = InitLogger(data);
+            await client.AutoConnectAsync(data.CancellationToken).ConfigureAwait(false);
             
             if (!client.IsConnected)
             {
@@ -79,19 +78,20 @@ namespace RuriLib.Blocks.Requests.Ftp
             var options = recursive ? FtpListOption.Recursive : FtpListOption.Auto;
             var list = new List<string>();
 
-            foreach (var item in await client.GetListing("/", options).ConfigureAwait(false))
+            foreach (var item in await client.GetListingAsync("/", options).ConfigureAwait(false))
             {
-                switch (item.Type)
+                if (item.Type == FtpFileSystemObjectType.Directory && 
+                    (kind == FtpItemKind.FilesAndFolders || kind == FtpItemKind.Folder))
                 {
-                    case FtpObjectType.Directory when kind is FtpItemKind.FilesAndFolders or FtpItemKind.Folder:
-                        data.Logger.Log(item.FullName, LogColors.Maize);
-                        list.Add(item.FullName);
-                        break;
-                    
-                    case FtpObjectType.File when kind is FtpItemKind.FilesAndFolders or FtpItemKind.File:
-                        data.Logger.Log(item.FullName, LogColors.Maize);
-                        list.Add(item.FullName);
-                        break;
+                    data.Logger.Log(item.FullName, LogColors.Maize);
+                    list.Add(item.FullName);
+                }
+
+                if (item.Type == FtpFileSystemObjectType.File &&
+                    (kind == FtpItemKind.FilesAndFolders || kind == FtpItemKind.File))
+                {
+                    data.Logger.Log(item.FullName, LogColors.Maize);
+                    list.Add(item.FullName);
                 }
             }
 
@@ -103,7 +103,7 @@ namespace RuriLib.Blocks.Requests.Ftp
         {
             data.Logger.LogHeader();
             var client = GetClient(data);
-            await client.DownloadFile(localFileName, remoteFileName, FtpLocalExists.Overwrite, 
+            await client.DownloadFileAsync(localFileName, remoteFileName, FtpLocalExists.Overwrite, 
                 FtpVerify.None, null, data.CancellationToken).ConfigureAwait(false);
 
             data.Logger.Log($"{remoteFileName} downloaded to {localFileName}", LogColors.Maize);
@@ -115,7 +115,7 @@ namespace RuriLib.Blocks.Requests.Ftp
         {
             data.Logger.LogHeader();
             var client = GetClient(data);
-            await client.DownloadDirectory(localDir, remoteDir, FtpFolderSyncMode.Update, existsPolicy,
+            await client.DownloadDirectoryAsync(localDir, remoteDir, FtpFolderSyncMode.Update, existsPolicy,
                 FtpVerify.None, null, null, data.CancellationToken).ConfigureAwait(false);
 
             data.Logger.Log($"{remoteDir} downloaded to {localDir}", LogColors.Maize);
@@ -127,7 +127,7 @@ namespace RuriLib.Blocks.Requests.Ftp
         {
             data.Logger.LogHeader();
             var client = GetClient(data);
-            await client.UploadFile(localFileName, remoteFileName, existsPolicy, true, 
+            await client.UploadFileAsync(localFileName, remoteFileName, existsPolicy, true, 
                 FtpVerify.None, null, data.CancellationToken).ConfigureAwait(false);
 
             data.Logger.Log($"{localFileName} uploaded to {remoteFileName}", LogColors.Maize);
@@ -138,12 +138,12 @@ namespace RuriLib.Blocks.Requests.Ftp
         {
             data.Logger.LogHeader();
             var client = GetClient(data);
-            await client.Disconnect(data.CancellationToken).ConfigureAwait(false);
+            await client.DisconnectAsync(data.CancellationToken).ConfigureAwait(false);
 
             data.Logger.Log("Disconnected from the FTP server", LogColors.Maize);
         }
 
-        [Block("Gets the protocol log", name = "Get FTP Log")]
+        [Block("Gets the protocol log", name = "Get Imap Log")]
         public static string FtpGetLog(BotData data)
         {
             data.Logger.LogHeader();
@@ -165,8 +165,8 @@ namespace RuriLib.Blocks.Requests.Ftp
                 => protocolLogger.AppendLine($"[{traceLevel}] {message}"));
         }
 
-        private static AsyncFtpClient GetClient(BotData data)
-            => data.TryGetObject<AsyncFtpClient>("ftpClient") ?? throw new Exception("Connect to a server first!");
+        private static FtpClient GetClient(BotData data)
+            => data.TryGetObject<FtpClient>("ftpClient") ?? throw new Exception("Connect to a server first!");
     }
 
     public enum FtpItemKind

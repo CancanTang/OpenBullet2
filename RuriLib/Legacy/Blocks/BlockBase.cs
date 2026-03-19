@@ -253,7 +253,8 @@ namespace RuriLib.Legacy.Blocks
                     output = output.Replace("<CAPTCHAID>", lastCaptchaInfo.Id.ToString());
                 }
 
-                output = output.Replace("<BOTNUM>", data.BOTNUM.ToString());
+                // TODO: Readd this
+                // output = output.Replace("<BOTNUM>", data.BotNumber.ToString());
 
                 if (data.Proxy != null)
                 {

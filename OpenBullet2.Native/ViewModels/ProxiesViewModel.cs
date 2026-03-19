@@ -52,7 +52,7 @@ namespace OpenBullet2.Native.ViewModels
             {
                 selectedGroup = proxyGroupsCollection.First(g => g.Id == value);
                 OnPropertyChanged();
-                _ = RefreshListAsync();
+                _ = RefreshList();
             }
         }
 
@@ -75,25 +75,25 @@ namespace OpenBullet2.Native.ViewModels
             SelectedGroupId = allGroup.Id;
         }
 
-        public async Task InitializeAsync()
+        public async Task Initialize()
         {
             if (!initialized)
             {
-                await RefreshGroupsAsync();
+                await RefreshGroups();
                 initialized = true;
             }
         }
 
-        public async Task RefreshGroupsAsync()
+        public async Task RefreshGroups()
         {
             SelectedGroupId = allGroup.Id;
             var entities = await proxyGroupRepo.GetAll().ToListAsync();
             ProxyGroupsCollection = new ObservableCollection<ProxyGroupEntity>(new ProxyGroupEntity[] { allGroup }.Concat(entities));
 
-            await RefreshListAsync();
+            await RefreshList();
         }
 
-        public async Task RefreshListAsync()
+        public async Task RefreshList()
         {
             var items = selectedGroup == allGroup
                 ? await proxyRepo.GetAll().ToListAsync()
@@ -105,21 +105,21 @@ namespace OpenBullet2.Native.ViewModels
             OnPropertyChanged(nameof(NotWorking));
         }
 
-        public Task AddGroupAsync(ProxyGroupEntity group)
+        public Task AddGroup(ProxyGroupEntity group)
         {
             ProxyGroupsCollection.Add(group);
             SelectedGroupId = allGroup.Id;
 
-            return proxyGroupRepo.AddAsync(group);
+            return proxyGroupRepo.Add(group);
         }
 
-        public async Task EditGroupAsync(ProxyGroupEntity group)
+        public async Task EditGroup(ProxyGroupEntity group)
         {
-            await proxyGroupRepo.UpdateAsync(group);
-            await RefreshGroupsAsync();
+            await proxyGroupRepo.Update(group);
+            await RefreshGroups();
         }
 
-        public async Task DeleteSelectedGroupAsync()
+        public async Task DeleteSelectedGroup()
         {
             if (selectedGroup == allGroup)
             {
@@ -140,15 +140,15 @@ namespace OpenBullet2.Native.ViewModels
                 }
             }
 
-            // This will cascade delete all the proxies in the group
-            await proxyGroupRepo.DeleteAsync(selectedGroup);
+            await proxyRepo.Delete(ProxiesCollection);
+            await proxyGroupRepo.Delete(selectedGroup);
 
             SelectedGroupId = allGroup.Id;
 
-            await RefreshGroupsAsync();
+            await RefreshGroups();
         }
 
-        public async Task AddProxiesAsync(ProxiesForImportDto dto)
+        public async Task AddProxies(ProxiesForImportDto dto)
         {
             if (selectedGroup == allGroup)
             {
@@ -170,38 +170,38 @@ namespace OpenBullet2.Native.ViewModels
             }
 
             var entities = proxies.Select(p => Mapper.MapProxyToProxyEntity(p)).ToList();
-            var currentGroup = await proxyGroupRepo.GetAsync(selectedGroup.Id);
+            var currentGroup = await proxyGroupRepo.Get(selectedGroup.Id);
             proxyRepo.Attach(currentGroup);
             entities.ForEach(e => e.Group = currentGroup);
 
-            await proxyRepo.AddAsync(entities);
-            await proxyRepo.RemoveDuplicatesAsync(currentGroup.Id);
-            await RefreshListAsync();
+            await proxyRepo.Add(entities);
+            await proxyRepo.RemoveDuplicates(currentGroup.Id);
+            await RefreshList();
         }
 
-        public async Task DeleteAsync(IEnumerable<ProxyEntity> proxies)
+        public async Task Delete(IEnumerable<ProxyEntity> proxies)
         {
-            await proxyRepo.DeleteAsync(proxies);
-            await RefreshListAsync();
+            await proxyRepo.Delete(proxies);
+            await RefreshList();
         }
 
-        public async Task DeleteNotWorkingAsync()
+        public async Task DeleteNotWorking()
         {
             var toRemove = proxiesCollection.Where(p => p.Status == ProxyWorkingStatus.NotWorking);
-            await proxyRepo.DeleteAsync(toRemove);
-            await RefreshListAsync();
+            await proxyRepo.Delete(toRemove);
+            await RefreshList();
         }
 
-        public async Task DeleteUntestedAsync()
+        public async Task DeleteUntested()
         {
             var toRemove = proxiesCollection.Where(p => p.Status == ProxyWorkingStatus.Untested);
-            await proxyRepo.DeleteAsync(toRemove);
-            await RefreshListAsync();
+            await proxyRepo.Delete(toRemove);
+            await RefreshList();
         }
 
         public override void UpdateViewModel()
         {
-            _ = RefreshListAsync();
+            _ = RefreshList();
             base.UpdateViewModel();
         }
     }

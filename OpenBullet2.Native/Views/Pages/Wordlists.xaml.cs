@@ -33,7 +33,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             vm = SP.GetService<ViewModelsService>().Wordlists;
             DataContext = vm;
-            _ = vm.InitializeAsync();
+            _ = vm.Initialize();
 
             InitializeComponent();
             window = SP.GetService<MainWindow>();
@@ -47,7 +47,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             foreach (var wordlist in SelectedWordlists)
             {
-                await vm.DeleteAsync(wordlist);
+                await vm.Delete(wordlist);
             }
 
             Alert.Success("Done", "Successfully deleted the selected wordlist references from the DB");
@@ -61,7 +61,7 @@ namespace OpenBullet2.Native.Views.Pages
 
         private async void DeleteNotFound(object sender, RoutedEventArgs e)
         {
-            var deleted = await vm.DeleteNotFoundAsync();
+            var deleted = await vm.DeleteNotFound();
             Alert.Success("Done", $"Successfully deleted {deleted} unresolved wordlist references from the DB");
         }
 
@@ -79,7 +79,7 @@ namespace OpenBullet2.Native.Views.Pages
         {
             try
             {
-                await vm.AddAsync(wordlist);
+                await vm.Add(wordlist);
             }
             catch (Exception ex)
             {
@@ -141,7 +141,7 @@ namespace OpenBullet2.Native.Views.Pages
                             Total = File.ReadLines(path).Count()
                         };
 
-                        await vm.AddAsync(entity);
+                        await vm.Add(entity);
                     }
                     catch
                     {

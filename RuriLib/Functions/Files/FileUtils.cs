@@ -18,12 +18,6 @@ namespace RuriLib.Functions.Files
             if (fileName == null)
                 throw new ArgumentNullException(nameof(fileName));
 
-            // If the file does not exist, the path is already valid.
-            if (!File.Exists(fileName))
-            {
-                return fileName;
-            }
-
             string path;
             var i = 0;
             do

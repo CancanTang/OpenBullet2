@@ -59,7 +59,7 @@ namespace OpenBullet2.Native.Views.Dialogs
 
                     // Remote
                     case 2:
-                        await ImportFromUrlAsync(urlTextbox.Text);
+                        await ImportFromUrl(urlTextbox.Text);
                         break;
                 }
             }
@@ -69,7 +69,7 @@ namespace OpenBullet2.Native.Views.Dialogs
             }
         }
 
-        private async Task ImportFromUrlAsync(string url)
+        private async Task ImportFromUrl(string url)
         {
             using var client = new HttpClient();
             using var request = new HttpRequestMessage();
